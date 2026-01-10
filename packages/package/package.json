@@ -1,0 +1,21 @@
+{
+  "name": "@react-learn/package",
+  "version": "0.0.1",
+  "description": "实验包",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "echo 'Build command here'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

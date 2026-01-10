@@ -1,0 +1,16 @@
+{
+  "name": "example",
+  "version": "0.0.1",
+  "description": "Demo 示例",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Dev command here'",
+    "build": "echo 'Build command here'"
+  },
+  "dependencies": {
+    "@react-learn/package": "workspace:*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
