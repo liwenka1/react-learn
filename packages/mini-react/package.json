@@ -1,7 +1,7 @@
 {
-  "name": "@react-learn/package",
+  "name": "@react-learn/mini-react",
   "version": "0.0.1",
-  "description": "实验包",
+  "description": "Mini React 实现 - 用于学习 React 底层原理",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -13,9 +13,15 @@
     }
   },
   "scripts": {
-    "build": "echo 'Build command here'"
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
   },
-  "keywords": [],
+  "keywords": [
+    "react",
+    "fiber",
+    "mini-react",
+    "learning"
+  ],
   "author": "",
   "license": "MIT"
 }

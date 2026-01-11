@@ -1,0 +1,17 @@
+{
+  "name": "demo",
+  "version": "0.0.1",
+  "description": "Mini React 演示项目",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Dev command here'",
+    "build": "echo 'Build command here'",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-learn/mini-react": "workspace:*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

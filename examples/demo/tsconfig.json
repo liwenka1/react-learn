@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@react-learn/mini-react": ["../../packages/mini-react/src"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"]
+}
