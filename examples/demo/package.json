@@ -5,8 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "echo 'Dev command here'",
-    "build": "echo 'Build command here'",
+    "dev": "vite --port 8080",
+    "build": "vite build",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -14,5 +14,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^7.3.1"
+  }
 }

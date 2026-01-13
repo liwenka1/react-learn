@@ -38,6 +38,11 @@ export default [
         module: 'readonly',
         require: 'readonly',
         exports: 'readonly',
+        // 添加浏览器全局变量
+        document: 'readonly',
+        window: 'readonly',
+        HTMLElement: 'readonly',
+        Text: 'readonly',
       },
     },
     plugins: {
