@@ -9,5 +9,5 @@
  * 5. React Server Components
  */
 
-// TODO: 在这里开始你的 Mini React 实现
-export {};
+export { createElement } from './createElement';
+export type { VirtualElement } from './type';

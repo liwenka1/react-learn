@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Mini React 演示项目",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "echo 'Dev command here'",
     "build": "echo 'Build command here'",
