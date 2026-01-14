@@ -1,7 +1,11 @@
 /**
  * Mini React 渲染测试
  */
-import { createElement, render } from '@react-learn/mini-react';
+import {
+  createElement,
+  render,
+  renderWithFiber,
+} from '@react-learn/mini-react';
 
 // 测试1：简单元素
 const element = createElement(
@@ -30,6 +34,7 @@ const container = document.getElementById('root');
 if (container) {
   // 渲染！
   render(element, container);
+  renderWithFiber(element, container);
   // eslint-disable-next-line no-console
   console.log('渲染完成！虚拟 DOM:', element);
 }

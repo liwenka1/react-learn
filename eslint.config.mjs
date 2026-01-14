@@ -43,6 +43,8 @@ export default [
         window: 'readonly',
         HTMLElement: 'readonly',
         Text: 'readonly',
+        requestIdleCallback: 'readonly',
+        IdleDeadline: 'readonly',
       },
     },
     plugins: {
