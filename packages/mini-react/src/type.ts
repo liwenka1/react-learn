@@ -23,4 +23,7 @@ export interface Fiber {
   sibling: Fiber | null;
 
   dom: HTMLElement | Text | null;
+
+  alternate: Fiber | null;
+  effectTag?: 'PLACEMENT' | 'UPDATE' | 'DELETION';
 }
