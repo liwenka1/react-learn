@@ -29,3 +29,6 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Reference source code (for learning only)
+references/
