@@ -12,6 +12,8 @@ export default [
       '**/build/**',
       '**/.next/**',
       '**/coverage/**',
+      // 忽略源码参考目录
+      'references/**',
     ],
   },
 

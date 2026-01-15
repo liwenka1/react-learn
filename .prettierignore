@@ -6,3 +6,5 @@ coverage
 pnpm-lock.yaml
 .pnpm-store
 *.log
+# 忽略源码参考目录
+references/
