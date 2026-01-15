@@ -184,6 +184,54 @@ function performUnitOfWork(fiber: Fiber): Fiber | null {
 }
 // ============ commitRoot：提交阶段 ============
 
+function updateDom(
+  dom: HTMLElement | Text,
+  prevProps: { [key: string]: any },
+  nextProps: { [key: string]: any }
+) {
+  // 特殊处理：文本节点
+  if (dom instanceof Text) {
+    if (prevProps.nodeValue !== nextProps.nodeValue) {
+      dom.nodeValue = String(nextProps.nodeValue ?? '');
+    }
+    return;
+  }
+
+  // 1. 移除旧的事件监听（旧的有，新的没有，或者值变了）
+  Object.keys(prevProps)
+    .filter(isEvent)
+    .filter((key) => !(key in nextProps) || prevProps[key] !== nextProps[key])
+    .forEach((name) => {
+      const eventType = eventName(name);
+      dom.removeEventListener(eventType, prevProps[name]);
+    });
+
+  // 2. 移除旧的属性（旧的有，新的没有）
+  Object.keys(prevProps)
+    .filter(isProperty)
+    .filter((key) => !(key in nextProps))
+    .forEach((name) => {
+      (dom as HTMLElement).removeAttribute(name);
+    });
+
+  // 3. 设置新的属性（新的有，和旧的不同）
+  Object.keys(nextProps)
+    .filter(isProperty)
+    .filter((key) => prevProps[key] !== nextProps[key])
+    .forEach((name) => {
+      (dom as HTMLElement).setAttribute(name, nextProps[name]);
+    });
+
+  // 4. 添加新的事件监听（新的有，旧的没有，或者值变了）
+  Object.keys(nextProps)
+    .filter(isEvent)
+    .filter((key) => prevProps[key] !== nextProps[key])
+    .forEach((name) => {
+      const eventType = eventName(name);
+      dom.addEventListener(eventType, nextProps[name]);
+    });
+}
+
 function commitWork(fiber: Fiber | null) {
   if (!fiber) return;
 
@@ -193,7 +241,7 @@ function commitWork(fiber: Fiber | null) {
     parentDom?.appendChild(fiber.dom);
   }
   if (fiber.effectTag === 'UPDATE' && fiber.dom) {
-    // todo: 更新 DOM
+    updateDom(fiber.dom, fiber.alternate?.props ?? {}, fiber.props);
   }
   if (fiber.effectTag === 'DELETION' && fiber.dom) {
     parentDom?.removeChild(fiber.dom);
