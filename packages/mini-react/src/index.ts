@@ -11,5 +11,5 @@
 
 export { createElement } from './createElement';
 export { render } from './render';
-export { render as renderWithFiber } from './fiber';
+export { render as renderWithFiber, useState } from './fiber';
 export type { VirtualElement } from './type';

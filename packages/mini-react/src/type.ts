@@ -1,5 +1,5 @@
 export interface VirtualElement {
-  type: string;
+  type: string | FunctionComponent;
   props: {
     [key: string]: any;
     children: VirtualElement[];
@@ -12,7 +12,7 @@ export interface Props {
 }
 
 export interface Fiber {
-  type: string;
+  type: string | FunctionComponent;
   props: {
     [key: string]: any;
     children: VirtualElement[];
@@ -26,4 +26,15 @@ export interface Fiber {
 
   alternate: Fiber | null;
   effectTag?: 'PLACEMENT' | 'UPDATE' | 'DELETION';
+
+  hooks: Hook[];
+}
+
+export interface FunctionComponent {
+  (props: Props): VirtualElement;
+}
+
+export interface Hook {
+  state: any;      // 存储状态值
+  queue: any[];    // 更新队列，存放 setState 的参数
 }

@@ -1,4 +1,4 @@
-import { Fiber, VirtualElement } from './type';
+import { Fiber, FunctionComponent, Hook, VirtualElement } from './type';
 
 // ============ 全局变量 ============
 
@@ -14,6 +14,12 @@ let currentRoot: Fiber | null = null;
 // 需要删除的 Fiber 节点
 let deletions: Fiber[] = [];
 
+// 当前正在渲染的函数组件 Fiber
+let wipFiber: Fiber | null = null;
+
+// 当前 Hook 的索引
+let hookIndex: number = 0;
+
 // ============ 辅助函数：创建 DOM ============
 
 const isEvent = (key: string) => key.startsWith('on');
@@ -28,8 +34,8 @@ function createDom(fiber: Fiber): HTMLElement | Text {
     return document.createTextNode(String(fiber.props.nodeValue ?? ''));
   }
 
-  // 普通元素节点
-  const dom = document.createElement(fiber.type);
+  // 普通元素节点（这里 fiber.type 一定是 string，因为函数组件不会调用 createDom）
+  const dom = document.createElement(fiber.type as string);
 
   // 设置属性
   Object.keys(fiber.props).forEach((name) => {
@@ -58,6 +64,7 @@ export function render(element: VirtualElement, container: HTMLElement) {
     child: null,
     sibling: null,
     alternate: currentRoot,
+    hooks: [],
   };
 
   // 2. 设置第一个工作单元
@@ -98,6 +105,7 @@ function reconcileChildren(wipFiber: Fiber, elements: VirtualElement[]) {
         sibling: null,
         alternate: oldFiber,
         effectTag: 'UPDATE',
+        hooks: [],
       };
     }
 
@@ -112,6 +120,7 @@ function reconcileChildren(wipFiber: Fiber, elements: VirtualElement[]) {
         sibling: null,
         alternate: null,
         effectTag: 'PLACEMENT',
+        hooks: [],
       };
     }
 
@@ -157,18 +166,49 @@ function workLoop(deadline: IdleDeadline) {
     requestIdleCallback(workLoop);
   }
 }
-// ============ performUnitOfWork：处理单个 Fiber ============
 
-function performUnitOfWork(fiber: Fiber): Fiber | null {
-  // 1️. 创建 DOM
+// ============ 处理原生 DOM 元素 ============
+
+function updateHostComponent(fiber: Fiber) {
+  // 1. 创建 DOM（如果还没有）
   if (!fiber.dom) {
     fiber.dom = createDom(fiber);
   }
 
-  // 2️. 协调子节点
+  // 2. 协调子节点
   reconcileChildren(fiber, fiber.props.children);
+}
 
-  // 3️. 返回下一个工作单元
+// ============ 处理函数组件 ============
+
+function updateFunctionComponent(fiber: Fiber) {
+  // 1. 设置全局变量，让 useState 知道当前在渲染哪个组件
+  wipFiber = fiber;
+  hookIndex = 0;
+  wipFiber.hooks = [];
+
+  // 2. 调用函数组件，获取子元素
+  //    这里 fiber.type 是函数，比如 Counter
+  //    调用它：Counter(props) 返回 VirtualElement
+  const children = [(fiber.type as FunctionComponent)(fiber.props)];
+
+  // 3. 协调子节点
+  reconcileChildren(fiber, children);
+}
+
+// ============ performUnitOfWork：处理单个 Fiber ============
+
+function performUnitOfWork(fiber: Fiber): Fiber | null {
+  // 判断是函数组件还是原生元素
+  const isFunctionComponent = typeof fiber.type === 'function';
+
+  if (isFunctionComponent) {
+    updateFunctionComponent(fiber);
+  } else {
+    updateHostComponent(fiber);
+  }
+
+  // 返回下一个工作单元
   if (fiber.child) {
     return fiber.child;
   }
@@ -232,10 +272,33 @@ function updateDom(
     });
 }
 
+// 向上查找有 DOM 的父级 Fiber
+function getParentDom(fiber: Fiber): HTMLElement | Text | null {
+  let parent = fiber.parent;
+  while (parent) {
+    if (parent.dom) {
+      return parent.dom;
+    }
+    parent = parent.parent;
+  }
+  return null;
+}
+
+// 向下查找有 DOM 的子级 Fiber 并删除
+function commitDeletion(fiber: Fiber, parentDom: HTMLElement | Text) {
+  if (fiber.dom) {
+    parentDom.removeChild(fiber.dom);
+  } else if (fiber.child) {
+    // 函数组件没有 DOM，继续找子节点
+    commitDeletion(fiber.child, parentDom);
+  }
+}
+
 function commitWork(fiber: Fiber | null) {
   if (!fiber) return;
 
-  const parentDom = fiber.parent?.dom;
+  // 函数组件没有 DOM，需要向上找有 DOM 的父级
+  const parentDom = getParentDom(fiber);
 
   if (fiber.effectTag === 'PLACEMENT' && fiber.dom) {
     parentDom?.appendChild(fiber.dom);
@@ -243,8 +306,10 @@ function commitWork(fiber: Fiber | null) {
   if (fiber.effectTag === 'UPDATE' && fiber.dom) {
     updateDom(fiber.dom, fiber.alternate?.props ?? {}, fiber.props);
   }
-  if (fiber.effectTag === 'DELETION' && fiber.dom) {
-    parentDom?.removeChild(fiber.dom);
+  if (fiber.effectTag === 'DELETION') {
+    if (parentDom) {
+      commitDeletion(fiber, parentDom);
+    }
     return;
   }
 
@@ -270,4 +335,63 @@ function commitRoot() {
 
   // 清空 wipRoot
   wipRoot = null;
+}
+
+// ============ useState ============
+
+export function useState<T>(
+  initialState: T
+): [T, (action: T | ((prev: T) => T)) => void] {
+  // 1. 获取旧的 Hook（如果有的话，从 alternate 上取）
+  const oldHook = wipFiber?.alternate?.hooks?.[hookIndex];
+
+  // 2. 创建新的 Hook
+  const hook: Hook = {
+    // 如果有旧 Hook，复用旧状态；否则用初始值
+    state: oldHook ? oldHook.state : initialState,
+    // 更新队列，存放本次渲染期间所有的 setState 调用
+    queue: [],
+  };
+
+  // 3. 执行上一次渲染期间积累的所有更新
+  //    （这些更新是上次 setState 放进去的）
+  const actions = oldHook ? oldHook.queue : [];
+  actions.forEach((action: T | ((prev: T) => T)) => {
+    // action 可能是值，也可能是函数
+    if (typeof action === 'function') {
+      hook.state = (action as (prev: T) => T)(hook.state);
+    } else {
+      hook.state = action;
+    }
+  });
+
+  // 4. 定义 setState 函数
+  const setState = (action: T | ((prev: T) => T)) => {
+    // 把 action 放入队列
+    hook.queue.push(action);
+
+    // 触发重新渲染（和 render 函数类似的逻辑）
+    wipRoot = {
+      type: currentRoot?.type ?? '',
+      props: currentRoot?.props ?? { children: [] },
+      dom: currentRoot?.dom ?? null,
+      parent: null,
+      child: null,
+      sibling: null,
+      alternate: currentRoot ?? null,
+      hooks: [],
+    };
+    nextUnitOfWork = wipRoot;
+    deletions = [];
+
+    // 启动工作循环
+    requestIdleCallback(workLoop);
+  };
+
+  // 5. 把 Hook 存入当前 Fiber
+  wipFiber!.hooks.push(hook);
+  hookIndex++;
+
+  // 6. 返回 [state, setState]
+  return [hook.state, setState];
 }

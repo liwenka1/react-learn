@@ -1,50 +1,47 @@
 /**
- * Mini React 渲染测试
+ * Mini React 渲染测试 - useState
  */
 import {
   createElement,
-  render,
   renderWithFiber,
+  useState,
 } from '@react-learn/mini-react';
 
-// 测试1：简单元素
-const element = createElement(
-  'div',
-  { id: 'app' },
-  createElement('h1', null, 'Hello Mini React! 🎉'),
-  createElement(
-    'p',
-    null,
-    '这是用我们自己写的 createElement 和 render 渲染的！'
-  ),
-  createElement(
-    'button',
-    {
-      onclick: () => {
-        window.alert('按钮被点击了！');
+// 函数组件：计数器
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return createElement(
+    'div',
+    { id: 'counter' },
+    createElement('h1', null, 'Mini React Counter'),
+    createElement('p', null, '当前计数: ', count),
+    createElement(
+      'button',
+      {
+        onclick: () => setCount(count + 1),
       },
-    },
-    '点击我'
-  )
-);
+      '点击 +1'
+    ),
+    createElement(
+      'button',
+      {
+        onclick: () => setCount((prev: number) => prev + 10),
+        style: 'margin-left: 10px',
+      },
+      '点击 +10 (函数式)'
+    )
+  );
+}
 
 // 获取容器
 const container = document.getElementById('root');
 
 if (container) {
-  // 渲染！
-  // render(element, container);
-  renderWithFiber(element, container);
-  // 2 秒后更新
-  window.setTimeout(() => {
-    const newElement = createElement(
-      'div',
-      { id: 'app' },
-      createElement('h1', null, '更新后的标题！🎉'),
-      createElement('p', null, '内容也变了！')
-    );
-    renderWithFiber(newElement, container);
-  }, 2000);
+  // 渲染函数组件
+  const app = createElement(Counter, null);
+  renderWithFiber(app, container);
+
   // eslint-disable-next-line no-console
-  console.log('渲染完成！虚拟 DOM:', element);
+  console.log('Counter 组件已渲染！');
 }
