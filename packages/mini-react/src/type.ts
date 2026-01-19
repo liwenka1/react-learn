@@ -35,6 +35,6 @@ export interface FunctionComponent {
 }
 
 export interface Hook {
-  state: any;      // 存储状态值
-  queue: any[];    // 更新队列，存放 setState 的参数
+  state: any; // 存储状态值
+  queue: any[]; // 更新队列，存放 setState 的参数
 }

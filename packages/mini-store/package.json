@@ -1,0 +1,31 @@
+{
+  "name": "@react-learn/mini-store",
+  "version": "0.0.1",
+  "description": "Mini Store - 轻量级状态管理库，类似 Zustand",
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "keywords": [
+    "state",
+    "store",
+    "zustand",
+    "react",
+    "hooks"
+  ],
+  "author": "",
+  "license": "MIT"
+}
